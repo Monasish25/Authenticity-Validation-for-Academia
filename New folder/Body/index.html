@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VerifyEd - Academic Certificate Verification System</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@ericblade/quagga2@1.8.1/dist/quagga.min.js"></script>
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+</head>
+<body>
+    <div class="modal-backdrop" id="loginModal">
+        <div class="modal-content">
+            <button class="modal-close" id="closeModal">&times;</button>
+            <div class="modal-tabs">
+                <div class="modal-tab active" data-tab="login">Login</div>
+                <div class="modal-tab" data-tab="signup">Sign Up</div>
+            </div>
+
+            <div class="modal-form active" id="loginForm">
+                <div class="role-selector">
+                    <button class="role-btn active" data-role="user">User</button>
+                    <button class="role-btn" data-role="admin">Admin</button>
+                </div>
+                <h2>Welcome Back</h2>
+
+                <div class="social-login">
+                    <button class="social-btn google">
+                        <i class="fab fa-google"></i>
+                    </button>
+                    <button class="social-btn linkedin">
+                        <i class="fab fa-linkedin"></i>
+                    </button>
+                    <button class="social-btn github">
+                        <i class="fab fa-github"></i>
+                    </button>
+                </div>
+
+                <div class="modal-divider">or use your email</div>
+
+                <div class="form-group">
+                    <label for="loginEmail">Email Address</label>
+                    <input type="email" id="loginEmail" placeholder="Enter your email">
+                </div>
+
+                <div class="form-group">
+                    <label for="loginPassword">Password</label>
+                    <input type="password" id="loginPassword" placeholder="Enter your password">
+                </div>
+
+                 <div class="login-hint">
+                     <p><b>Demo User:</b> user@demo.com / password123<br>
+                     <b>Demo Admin:</b> admin@demo.com / admin123</p>
+                 </div>
+
+                <div class="forgot-password">
+                    <a href="#" style="color: var(--primary-blue); text-decoration: none;">Forgot Password?</a>
+                </div>
+
+                <button id="loginBtn" class="btn btn-primary" style="width: 100%;">Login</button>
+            </div>
+
+            <div class="modal-form" id="signupForm">
+                <div class="role-selector">
+                    <button class="role-btn active" data-role="user">User</button>
+                    <button class="role-btn" data-role="admin">Admin</button>
+                </div>
+                <h2>Create Account</h2>
+
+                <div class="social-login">
+                    <button class="social-btn google">
+                        <i class="fab fa-google"></i>
+                    </button>
+                    <button class="social-btn linkedin">
+                        <i class="fab fa-linkedin"></i>
+                    </button>
+                    <button class="social-btn github">
+                        <i class="fab fa-github"></i>
+                    </button>
+                </div>
+
+                <div class="modal-divider">or use your email</div>
+
+                <div class="form-group">
+                    <label for="signupName">Full Name</label>
+                    <input type="text" id="signupName" placeholder="Enter your full name">
+                </div>
+
+                <div class="form-group">
+                    <label for="signupEmail">Email Address</label>
+                    <input type="email" id="signupEmail" placeholder="Enter your email">
+                </div>
+
+                <div class="form-group">
+                    <label for="signupPassword">Password</label>
+                    <input type="password" id="signupPassword" placeholder="Create a password">
+                </div>
+
+                <div class="form-group">
+                    <label for="signupConfirm">Confirm Password</label>
+                    <input type="password" id="signupConfirm" placeholder="Confirm your password">
+                </div>
+
+                <div class="terms-check">
+                    <input type="checkbox" id="termsAgree">
+                    <label for="termsAgree">I agree to the <a href="#" style="color: var(--primary-blue);">Terms</a> and <a href="#" style="color: var(--primary-blue);">Privacy Policy</a></label>
+                </div>
+
+                <button id="signupBtn" class="btn btn-primary" style="width: 100%;">Create Account</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-backdrop" id="certViewerModal">
+        <div class="modal-content cert-viewer-content">
+            <button class="modal-close" id="closeCertViewer">&times;</button>
+            <div class="cert-viewer-grid">
+                <div class="cert-viewer-preview" id="certViewerPreview">
+                    <h3 style="text-align: center;">Certificate Preview</h3>
+                    <div class="file-placeholder">
+                        <i class="fas fa-file-pdf"></i>
+                        <p>Simulated preview for <span id="previewFileName"></span></p>
+                    </div>
+                </div>
+                <div class="cert-viewer-details">
+                    <h3>Certificate Details</h3>
+                    <div class="detail-row">
+                        <div class="detail-label">Cert #:</div>
+                        <div class="detail-value" id="viewerCertNum"></div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">Name:</div>
+                        <div class="detail-value" id="viewerGradName"></div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">Institution:</div>
+                        <div class="detail-value" id="viewerInstitution"></div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">Year:</div>
+                        <div class="detail-value" id="viewerGradYear"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <header>
+        <div class="container header-content">
+            <div class="logo">
+                <i class="fas fa-graduation-cap"></i>
+                <span>VerifyEd</span>
+            </div>
+            <nav id="main-nav">
+                <ul>
+                    <li><a href="#home">Home</a></li>
+                    <li><a href="#features">Features</a></li>
+                    <li><a href="#verify">Verify</a></li>
+                    <li><a href="#about">About</a></li>
+                    <li><a href="#" id="openLogin">Login</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <section class="hero" id="home">
+            <div class="container">
+                <h1>Detect Fake Degrees with Advanced Verification</h1>
+                <p>VerifyEd helps educational institutions, employers, and government bodies authenticate academic certificates using AI, OCR, and blockchain technology.</p>
+                <p class="sr-only">VerifyEd helps educational institutions, employers, and government bodies authenticate academic certificates using AI, OCR, and blockchain technology.</p>
+                <div class="hero-buttons">
+                    <button class="btn btn-primary" onclick="showVerification()">Verify a Certificate</button>
+                    <button id="heroInstitutionBtn" class="btn btn-outline" onclick="showDashboard()">Institution Login</button>
+                </div>
+            </div>
+        </section>
+
+        <section class="features" id="features">
+            <div class="container">
+                <h2 class="section-title">How VerifyEd Works</h2>
+                <div class="features-grid">
+                    <div class="feature-card fade-in">
+                        <div class="feature-icon">
+                            <i class="fas fa-upload"></i>
+                        </div>
+                        <h3>Upload Certificate</h3>
+                        <p>Upload a digital copy of the academic certificate in PDF or image format for analysis.</p>
+                    </div>
+                    <div class="feature-card fade-in">
+                        <div class="feature-icon">
+                            <i class="fas fa-search"></i>
+                        </div>
+                        <h3>AI-Powered Analysis</h3>
+                        <p>Our system uses OCR and AI algorithms to extract and verify document details.</p>
+                    </div>
+                    <div class="feature-card fade-in">
+                        <div class="feature-icon">
+                            <i class="fas fa-shield-alt"></i>
+                        </div>
+                        <h3>Blockchain Verification</h3>
+                        <p>Check digital signatures and blockchain records for certificate authenticity.</p>
+                    </div>
+                    <div class="feature-card fade-in">
+                        <div class="feature-icon">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <h3>Instant Results</h3>
+                        <p>Receive immediate verification results with detailed authenticity report.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="verification-section" id="verify">
+            <div class="feature-overlay" id="verification-overlay">
+                <h3><i class="fas fa-lock"></i> Features Locked</h3>
+                <p>Please log in to your account to access the certificate verification tools.</p>
+                <button class="btn btn-primary" id="overlayLoginBtn">Login to Verify</button>
+            </div>
+            <div class="container verification-container">
+                <h2 class="section-title">Verify a Certificate</h2>
+                <div class="upload-area" id="dropZone">
+                    <div class="upload-icon">
+                        <i class="fas fa-file-upload"></i>
+                    </div>
+                    <div class="upload-text">
+                        <h3>Upload Certificate</h3>
+                        <p>Drag & drop your certificate file here or click to browse</p>
+                    </div>
+                    <p>Supported formats: PDF, JPG, PNG (Max size: 10MB)</p>
+                </div>
+                <div class="or-divider">OR</div>
+                <div class="qr-scanner-container">
+                    <h3 style="text-align: center; margin-bottom: 20px; color: var(--primary-blue);">Scan Certificate QR Code</h3>
+
+                    <div id="new-qr-reader">
+                        <div class="scanner-laser"></div>
+                    </div>
+
+                    <div class="scanner-controls">
+                        <button id="start-scanner" class="btn btn-primary">
+                            <i class="fas fa-camera"></i> Start Scanner
+                        </button>
+                        <button id="stop-scanner" class="btn btn-outline" disabled>
+                            <i class="fas fa-stop"></i> Stop Scanner
+                        </button>
+                    </div>
+                    <div id="scanner-status" class="scanner-status">
+                        Scanner is off. Click "Start Scanner" to begin.
+                    </div>
+                    <div id="scanned-result" class="scanned-result">
+                        <h4>Scan Preview:</h4>
+                        <canvas id="scan-preview" style="width: 150px; border-radius: 5px; border: 1px solid #ccc; margin-top: 5px;"></canvas>
+                        <h4 style="margin-top: 10px;">Scanned Certificate ID:</h4>
+                        <p id="scanned-certificate-id"></p>
+                        <button class="btn btn-primary" onclick="verifyScannedCertificate()">
+                            Verify This Certificate
+                        </button>
+                    </div>
+                </div>
+                <div class="or-divider">OR</div>
+                <div class="manual-input">
+                    <h3 style="text-align: center; margin-bottom: 20px; color: var(--primary-blue);">Enter Certificate Details Manually</h3>
+                    <div class="form-group">
+                        <label for="certificateNumber">Certificate Number</label>
+                        <input type="text" id="certificateNumber" placeholder="Enter certificate number">
+                    </div>
+                    <div class="form-group">
+                        <label for="institution">Educational Institution</label>
+                        <select id="institution">
+
+                            <option value="">Select institution</option>
+                            <option value="BBMKU">BINOD BIHARI MAHTO KOYALANCHAL UNIVERSITY, DHANBAD</option>
+                            <option value="DSPMU">DR SHYAMA PRASAD MUKHERJEE UNIVERSITY, RANCHI</option>
+                            <option value="JWU">JAMSHEDPUR WOMEN'S UNIVERSITY</option>
+                            <option value="JRSU">JHARKHAND RAKSHA SHAKTI UNIVERSITY</option>
+                            <option value="KU">KOLHAN UNIVERSITY, CHAIBASA</option>
+                            <option value="NPU">NILAMBER PITAMBER UNIVERSITY, PALAMU</option>
+                            <option value="RU">RANCHI UNIVERSITY, RANCHI</option>
+                            <option value="SKMU">SIDO KANHU MURMU UNIVERSITY, DUMKA</option>
+                            <option value="JUT">Jharkhand University of Technology</option>
+                            <option value="NLU">National Law University, Ranchi</option>
+                            <option value="IIM">IIM Ranchi</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="graduateName">Graduate's Name</label>
+                        <input type="text" id="graduateName" placeholder="Enter graduate's full name">
+                    </div>
+                    <div class="form-group">
+                        <label for="year">Year of Graduation</label>
+                        <input type="number" id="year" placeholder="Enter graduation year">
+                    </div>
+                    <button class="btn btn-primary" style="width: 100%;" onclick="verifyCertificate()">Verify Certificate</button>
+                    <div class="spinner" id="verification-spinner"></div>
+                </div>
+            </div>
+        </section>
+
+        <section class="results-section" id="results">
+            <div class="container">
+                <div class="result-card" id="result-card">
+                    <div class="result-icon" id="result-icon-container">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <h2 id="result-title">Certificate Verified Successfully!</h2>
+                    <p id="result-message">This certificate has been verified against our institutional database and is authentic.</p>
+                    <div class="result-details" id="result-details-container">
+                        <h3 style="margin-bottom: 15px; color: var(--primary-blue);">Certificate Details</h3>
+                        <div class="detail-row">
+                            <div class="detail-label">Certificate Number:</div>
+                            <div class="detail-value" id="res-cert-num">RU2023156789</div>
+                        </div>
+                        <div class="detail-row">
+                            <div class="detail-label">Institution:</div>
+                            <div class="detail-value" id="res-institution">Ranchi University</div>
+                        </div>
+                        <div class="detail-row">
+                            <div class="detail-label">Graduate's Name:</div>
+                            <div class="detail-value" id="res-grad-name">Priya Sharma</div>
+                        </div>
+                        <div class="detail-row">
+                            <div class="detail-label">Degree:</div>
+                            <div class="detail-value" id="res-degree">Bachelor of Science in Computer Science</div>
+                        </div>
+                        <div class="detail-row">
+                            <div class="detail-label">Year of Graduation:</div>
+                            <div class="detail-value" id="res-grad-year">2023</div>
+                        </div>
+                        <div class="detail-row">
+                            <div class="detail-label">Verification Method:</div>
+                            <div class="detail-value" id="res-method">Database Match + Digital Signature</div>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary" style="margin-top: 30px;" onclick="printResult()">
+                        <i class="fas fa-print"></i> Print Verification Report
+                    </button>
+                </div>
+            </div>
+        </section>
+
+
+        <section class="about-section" id="about">
+            <div class="container">
+                <h2 class="section-title">About VerifyEd</h2>
+                <div class="about-content">
+                    <div class="about-image">
+                        <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS7XuQfqBDZ6avHbf46LKDCBCTVniZTlWmEuAsqFnfE7uxMkBl4Qo1Oaws&s=10"alt="VerifyEd Team">
+                    </div>
+                    <div class="about-text">
+                        <h2>Our Mission</h2>
+                        <p>VerifyEd was created to combat the growing problem of fake academic certificates and degrees. With increasing digitization, fraudulent documents have become more sophisticated, making it difficult for employers, institutions, and government bodies to verify authenticity.</p>
+                        <p>Our platform leverages cutting-edge technology including AI, OCR, and blockchain to provide a robust verification system that can detect even the most sophisticated forgeries.</p>
+                        <p>We work with educational institutions across Jharkhand to create a secure, tamper-proof database of academic credentials that can be verified instantly by authorized parties.</p>
+                    </div>
+                </div>
+
+                <div class="team-grid">
+                    <div class="team-member fade-in">
+                        <img src="https://www.siasat.com/wp-content/uploads/2020/07/hemant-soren.jpg" alt="Team Member">
+                        <h3>Hemant Soren</h3>
+                        <p>Honourable CM Jharkhand</p>
+                    </div>
+                    <div class="team-member fade-in">
+                        <img src="https://c.ndtvimg.com/2023-04/vt86oo2g_jagarnath-mahto_625x300_06_April_23.jpg" alt="Team Member">
+                        <h3>Jagarnath Mahto</h3>
+                        <p>Honourable Education Minister Jharkhand</p>
+                    </div>
+                    <div class="team-member fade-in">
+                        <img src="https://tse4.mm.bing.net/th/id/OIP.r_5x68KUuV7ohyoytRQPKQAAAA?rs=1&pid=ImgDetMain&o=7&rm=3" alt="Team Member">
+                        <h3>Shri Uma Shankar Singh</h3>
+                        <p>Education Secretary IAS</p>
+                    </div>
+                    <div class="team-member fade-in">
+                        <img src="https://www.jharkhand.gov.in/Documents/D025/WhosWho/D025WhosWho19082025034648281.jpeg" alt="Team Member">
+                        <h3>Smt. Sita Puspa</h3>
+                        <p>Additional Secretary</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="dashboard-section" id="dashboard">
+            <div class="container">
+                <h2 class="section-title">Institution Dashboard</h2>
+                <div class="stats-grid">
+                    <div class="stat-card fade-in">
+                        <div class="stat-number">12,458</div>
+                        <div class="stat-label">Total Certificates</div>
+                    </div>
+                    <div class="stat-card fade-in">
+                        <div class="stat-number">327</div>
+                        <div class="stat-label">Verifications Today</div>
+                    </div>
+                    <div class="stat-card fade-in">
+                        <div class="stat-number">18</div>
+                        <div class="stat-label">Fraud Attempts</div>
+                    </div>
+                    <div class="stat-card fade-in">
+                        <div class="stat-number">99.7%</div>
+                        <div class="stat-label">Accuracy Rate</div>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <h3 style="margin-bottom: 20px; color: var(--primary-blue);">Monthly Verification Trends</h3>
+                    <div style="height: 300px; background-color: #f9fafb; display: flex; align-items: center; justify-content: center; border-radius: 10px;">
+                        <p style="color: #6b7280;">Verification chart visualization would appear here</p>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <h3 style="margin-bottom: 20px; color: var(--primary-blue);">Recent Verification Activities</h3>
+                    <div style="height: 200px; background-color: #f9fafb; display: flex; align-items: center; justify-content: center; border-radius: 10px;">
+                        <p style="color: #6b7280;">Recent activities table would appear here</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="admin-dashboard-section" id="admin-dashboard">
+            <div class="container">
+                <h2 class="section-title">Admin Document Management</h2>
+                <div class="admin-grid">
+                    <div class="admin-form-container">
+                        <h3>Add New Certificate</h3>
+                        <form id="add-certificate-form">
+                            <div class="form-group">
+                                <label for="newCertNumber">Certificate Number</label>
+                                <input type="text" id="newCertNumber" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="newGradName">Graduate's Name</label>
+                                <input type="text" id="newGradName" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="newInstitution">Institution</label>
+                                <input type="text" id="newInstitution" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="newGradYear">Graduation Year</label>
+                                <input type="number" id="newGradYear" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary" style="width: 100%;">Add Certificate</button>
+                        </form>
+                    </div>
+                    <div class="admin-table-container">
+                        <div class="admin-upload-area" id="adminDropZone">
+                            <input type="file" id="adminFileInput" multiple hidden accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel, application/pdf">
+                            <div class="upload-icon">
+                                <i class="fas fa-file-csv"></i>
+                            </div>
+                            <div class="upload-text">
+                                <h3>Bulk Upload Certificates</h3>
+                                <p>Drag & drop a CSV, Excel, or PDF file here, or click to browse.</p>
+                            </div>
+                        </div>
+
+                        <h3>Manage Certificates</h3>
+                        <table class="certificates-table">
+                            <thead>
+                                <tr>
+                                    <th>Cert #</th>
+                                    <th>Name</th>
+                                    <th>Institution</th>
+                                    <th>Year</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="certificates-tbody">
+                                <tr onclick="openCertViewer('RU2023156789', 'Priya Sharma', 'Ranchi University', '2023')">
+                                    <td>RU2023156789</td>
+                                    <td>Priya Sharma</td>
+                                    <td>Ranchi University</td>
+                                    <td>2023</td>
+                                    <td><button class="btn btn-danger" onclick="event.stopPropagation(); deleteCertificate(this)">Delete</button></td>
+                                </tr>
+                                <tr onclick="openCertViewer('JUT2022987654', 'Rajesh Kumar', 'JUT, Ranchi', '2022')">
+                                    <td>JUT2022987654</td>
+                                    <td>Rajesh Kumar</td>
+                                    <td>JUT, Ranchi</td>
+                                    <td>2022</td>
+                                    <td><button class="btn btn-danger" onclick="event.stopPropagation(); deleteCertificate(this)">Delete</button></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                 <div class="blacklist-container">
+                     <h3>
+                         <i class="fas fa-exclamation-triangle"></i>
+                         Blacklist Management
+                     </h3>
+                     <p class="blacklist-description">
+                         Enter a certificate number below to mark it as fraudulent or revoked.
+                         This will prevent it from being successfully verified by any user.
+                     </p>
+                     <form id="blacklist-form">
+                         <div class="form-group">
+                             <label for="blacklistCertNumber">Certificate Number to Blacklist</label>
+                             <input type="text" id="blacklistCertNumber" placeholder="e.g., FAKE202312345" required>
+                         </div>
+                         <button type="submit" class="btn btn-danger" style="width: 100%;">
+                             <i class="fas fa-ban"></i> Add to Blacklist
+                         </button>
+                     </form>
+                     <div class="blacklist-list-container">
+                         <h4>Currently Blacklisted Certificates:</h4>
+                         <ul id="blacklisted-list">
+                          </ul>
+                     </div>
+                 </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer>
+        <div class="container footer-content">
+            <div class="footer-logo">VerifyEd</div>
+            <div class="footer-links">
+                <a href="#">Privacy Policy</a>
+                <a href="#">Terms of Service</a>
+                <a href="#">Contact Us</a>
+                <a href="#">API Documentation</a>
+            </div>
+            <div class="copyright">
+                &copy; 2023 VerifyEd. Developed for Jharkhand Higher Education Department.
+            </div>
+        </div>
+    </footer>
+    <script src="main.js"></script>
+</body>
+</html>
