@@ -1,0 +1,15 @@
+{
+  "projects": {
+    "default": "academic-verification"
+  },
+  "targets": {
+    "verify-ed": {
+      "hosting": {
+        "academic-verification": [
+          "academic-verification"
+        ]
+      }
+    }
+  },
+  "etags": {}
+}
