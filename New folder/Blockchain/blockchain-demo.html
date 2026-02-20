@@ -1,0 +1,264 @@
+<!-- <!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Simple Blockchain Demo</title>
+  <style>
+    :root { --bg:#0f1724; --card:#0b1220; --accent:#7dd3fc; --muted:#94a3b8; --good:#10b981; --bad:#ef4444; }
+    body{font-family:Inter,ui-sans-serif,system-ui,Segoe UI,Roboto,"Helvetica Neue",Arial;background:linear-gradient(180deg,#071021,#0b1220);color:#e6eef8;margin:0;padding:28px;}
+    h1{font-size:20px;margin:0 0 10px}
+    .app {max-width:1000px;margin:0 auto;display:grid;grid-template-columns:360px 1fr;gap:20px;}
+    .panel{background:linear-gradient(180deg,var(--card),#071826);border-radius:12px;padding:16px;box-shadow:0 6px 24px rgba(2,6,23,.6);}
+    label{display:block;font-size:13px;color:var(--muted);margin-top:10px}
+    input[type="text"], textarea{width:100%;padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,.04);background:transparent;color:inherit;font-size:14px}
+    button{margin-top:12px;padding:10px 12px;border-radius:10px;border:0;background:var(--accent);color:#012;cursor:pointer;font-weight:600}
+    .small{font-size:13px;color:var(--muted)}
+    .blocks{display:flex;flex-direction:column;gap:14px}
+    .block{border-radius:10px;padding:12px;background:linear-gradient(180deg,#05202b,#05313b);box-shadow:inset 0 1px 0 rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.03)}
+    .row{display:flex;justify-content:space-between;gap:12px;align-items:center}
+    .meta{font-size:12px;color:var(--muted);margin-top:8px;word-break:break-all}
+    .hash{font-family:monospace;font-size:12px;color:#d1f5ff;background:rgba(255,255,255,.02);padding:6px;border-radius:6px;margin-top:8px}
+    .status-valid{color:var(--good);font-weight:700}
+    .status-invalid{color:var(--bad);font-weight:700}
+    .controls{display:flex;gap:8px;align-items:center;margin-top:8px}
+    footer{max-width:1000px;margin:18px auto 0;color:var(--muted);font-size:13px}
+    .difficulty-input{width:70px}
+    @media (max-width:900px){.app{grid-template-columns:1fr;}}
+  </style>
+</head>
+<body>
+  <h1>Simple Blockchain Demo (HTML + CSS + JS)</h1>
+  <div class="app">
+    <div class="panel">
+      <div>
+        <label>Data to store in new block</label>
+        <textarea id="dataInput" rows="4" placeholder="Type some data..."></textarea>
+
+        <label>Proof-of-Work difficulty (leading zeros)</label>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input id="difficultyInput" class="difficulty-input" type="number" min="1" max="6" value="3" />
+          <div class="small">Higher difficulty -> more mining time (browser CPU)</div>
+        </div>
+
+        <div class="controls">
+          <button id="addBtn">Add & Mine Block</button>
+          <button id="resetBtn" style="background:#ef4444;color:white">Reset Chain</button>
+        </div>
+
+        <div class="small" style="margin-top:12px">
+          <strong>Note:</strong> This demo uses Web Crypto SHA-256 and simple proof-of-work. It's for learning only.
+        </div>
+      </div>
+      <hr style="margin:12px 0;border:none;border-top:1px solid rgba(255,255,255,.03)" />
+      <div>
+        <div class="small">Chain status: <span id="chainStatus" class="status-valid">Valid ✓</span></div>
+        <div class="small" style="margin-top:6px">Blocks stored in <code>localStorage</code>. Open console for debugging.</div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <div class="small">Blockchain</div>
+          <h2 style="margin:4px 0 10px;font-size:18px">Blocks</h2>
+        </div>
+        <div class="small" id="chainInfo">Blocks: 0</div>
+      </div>
+
+      <div id="blocksContainer" class="blocks"></div>
+    </div>
+  </div>
+
+  <footer>Simple client-side blockchain. Not a production ledger.</footer>
+
+  <script>
+  // ---------- Utility: SHA-256 returning hex string ----------
+  async function sha256Hex(message) {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(message);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map(b => b.toString(16).padStart(2,'0')).join('');
+  }
+
+  // ---------- Block class ----------
+  class Block {
+    constructor(index, timestamp, data, previousHash = '', nonce = 0, hash = '') {
+      this.index = index;
+      this.timestamp = timestamp;
+      this.data = data;
+      this.previousHash = previousHash;
+      this.nonce = nonce;
+      this.hash = hash || '';
+    }
+
+    async calculateHash() {
+      const payload = this.index + this.previousHash + this.timestamp + JSON.stringify(this.data) + this.nonce;
+      return await sha256Hex(payload);
+    }
+
+    // Mine until hash starts with difficulty number of zeros
+    async mine(difficulty) {
+      const target = '0'.repeat(difficulty);
+      this.nonce = 0;
+      this.hash = await this.calculateHash();
+      while (!this.hash.startsWith(target)) {
+        this.nonce++;
+        this.hash = await this.calculateHash();
+        // tiny yield so browser remains responsive for high difficulty (not blocking UI)
+        if (this.nonce % 256 === 0) await new Promise(r => setTimeout(r, 0));
+      }
+      return this.hash;
+    }
+  }
+
+  // ---------- Blockchain class ----------
+  class Blockchain {
+    constructor(difficulty = 3) {
+      this.chain = [];
+      this.difficulty = difficulty;
+      this.loadFromStorage();
+      if (this.chain.length === 0) {
+        // create genesis block if none
+        this.createGenesis();
+      }
+    }
+
+    async createGenesis() {
+      const genesis = new Block(0, new Date().toISOString(), "Genesis Block", "0");
+      await genesis.mine(this.difficulty);
+      this.chain = [genesis];
+      this.saveToStorage();
+    }
+
+    getLatestBlock() {
+      return this.chain[this.chain.length - 1];
+    }
+
+    async addBlock(newBlock) {
+      newBlock.previousHash = this.getLatestBlock().hash;
+      newBlock.index = this.getLatestBlock().index + 1;
+      newBlock.timestamp = new Date().toISOString();
+      await newBlock.mine(this.difficulty);
+      this.chain.push(newBlock);
+      this.saveToStorage();
+      return newBlock;
+    }
+
+    async isChainValid() {
+      for (let i = 1; i < this.chain.length; i++) {
+        const current = this.chain[i];
+        const previous = this.chain[i - 1];
+        const recalculated = await current.calculateHash();
+        if (current.hash !== recalculated) return false;
+        if (current.previousHash !== previous.hash) return false;
+      }
+      return true;
+    }
+
+    saveToStorage() {
+      // store minimal block data
+      const serial = JSON.stringify(this.chain.map(b => ({
+        index: b.index, timestamp: b.timestamp, data: b.data, previousHash: b.previousHash, nonce: b.nonce, hash: b.hash
+      })));
+      localStorage.setItem('simple_chain', serial);
+    }
+
+    loadFromStorage() {
+      const raw = localStorage.getItem('simple_chain');
+      if (!raw) { this.chain = []; return; }
+      try {
+        const arr = JSON.parse(raw);
+        this.chain = arr.map(obj => new Block(obj.index, obj.timestamp, obj.data, obj.previousHash, obj.nonce, obj.hash));
+      } catch (e) {
+        console.warn('Failed to load chain from storage', e);
+        this.chain = [];
+      }
+    }
+
+    reset() {
+      localStorage.removeItem('simple_chain');
+      this.chain = [];
+    }
+  }
+
+  // ---------- UI glue ----------
+  const dataInput = document.getElementById('dataInput');
+  const addBtn = document.getElementById('addBtn');
+  const blocksContainer = document.getElementById('blocksContainer');
+  const chainStatus = document.getElementById('chainStatus');
+  const chainInfo = document.getElementById('chainInfo');
+  const resetBtn = document.getElementById('resetBtn');
+  const difficultyInput = document.getElementById('difficultyInput');
+
+  let chain = new Blockchain(parseInt(difficultyInput.value, 10) || 3);
+
+  // render chain to DOM
+  async function renderChain() {
+    blocksContainer.innerHTML = '';
+    chainInfo.textContent = 'Blocks: ' + chain.chain.length;
+    const valid = await chain.isChainValid();
+    chainStatus.textContent = valid ? 'Valid ✓' : 'Invalid ✗';
+    chainStatus.className = valid ? 'status-valid' : 'status-invalid';
+
+    // Render each block
+    for (const b of chain.chain) {
+      const div = document.createElement('div');
+      div.className = 'block';
+      div.innerHTML = `
+        <div class="row"><div><strong>Block #${b.index}</strong></div><div class="small">${new Date(b.timestamp).toLocaleString()}</div></div>
+        <div class="meta"><strong>Prev Hash:</strong><div class="hash">${b.previousHash}</div></div>
+        <div class="meta"><strong>Data:</strong><div style="margin-top:6px">${escapeHtml(String(b.data))}</div></div>
+        <div class="meta"><strong>Nonce:</strong> ${b.nonce} &nbsp; <strong>Difficulty:</strong> ${chain.difficulty}</div>
+        <div class="meta"><strong>Hash:</strong><div class="hash">${b.hash}</div></div>
+      `;
+      blocksContainer.appendChild(div);
+    }
+  }
+
+  function escapeHtml(s) {
+    return s.replace(/[&<>"']/g, (m) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  }
+
+  addBtn.addEventListener('click', async () => {
+    addBtn.disabled = true;
+    const difficulty = parseInt(difficultyInput.value, 10) || 3;
+    chain.difficulty = difficulty;
+    const payload = dataInput.value.trim();
+    if (!payload) {
+      alert('Please enter data to add to block.');
+      addBtn.disabled = false;
+      return;
+    }
+    const newBlock = new Block();
+    newBlock.data = payload;
+    const start = performance.now();
+    console.log('Mining block with difficulty', difficulty);
+    await chain.addBlock(newBlock);
+    const took = ((performance.now() - start)/1000).toFixed(2);
+    console.log('Mined in', took, 's');
+    dataInput.value = '';
+    await renderChain();
+    addBtn.disabled = false;
+  });
+
+  resetBtn.addEventListener('click', async () => {
+    if (!confirm('Reset chain (clear localStorage)?')) return;
+    chain.reset();
+    chain = new Blockchain(parseInt(difficultyInput.value, 10) || 3);
+    await renderChain();
+  });
+
+  difficultyInput.addEventListener('change', () => {
+    const v = parseInt(difficultyInput.value, 10);
+    if (isNaN(v) || v < 1) difficultyInput.value = 1;
+    if (v > 6) difficultyInput.value = 6; // cap to avoid freezing browser
+    chain.difficulty = parseInt(difficultyInput.value, 10);
+  });
+
+  // initial render
+  window.addEventListener('load', renderChain);
+  </script>
+</body>
+</html> -->
