@@ -6,20 +6,30 @@ import {
     addToBlacklist,
     removeFromBlacklist,
     getBlacklist,
+    updateCertificate,
+    uploadCertificateImage,
+    saveOcrScanResult,
 } from '../services/certificateService';
 import { useAuth } from '../contexts/AuthContext';
 import { getPendingCerts, approveCert } from '../services/multiSigService';
+import { analyzeFullCertificate } from '../services/ocrAnalysisService';
 
 export default function AdminDashboard({ onOpenCertViewer, showToast }) {
     const { isAdmin } = useAuth();
     const [certificates, setCertificates] = useState([]);
     const [blacklist, setBlacklist] = useState([]);
-    const [newCert, setNewCert] = useState({ certNumber: '', name: '', institution: '', year: '' });
+    const [newCert, setNewCert] = useState({ certNumber: '', name: '', institution: '', year: '', degree: '' });
     const [blacklistInput, setBlacklistInput] = useState('');
     const [removingItems, setRemovingItems] = useState(new Set());
     const [pendingCerts, setPendingCerts] = useState([]);
+    const [isOcrScanning, setIsOcrScanning] = useState(false);
+    const [uploadingForCert, setUploadingForCert] = useState(null);
+    const [isBulkUploading, setIsBulkUploading] = useState(false);
+    const [bulkProgress, setBulkProgress] = useState({ current: 0, total: 0, filename: '' });
 
     const adminFileInputRef = useRef(null);
+    const certScanInputRef = useRef(null);
+    const tableImageInputRef = useRef(null);
 
     useEffect(() => {
         loadData();
@@ -48,10 +58,10 @@ export default function AdminDashboard({ onOpenCertViewer, showToast }) {
                 name: newCert.name,
                 institution: newCert.institution,
                 year: newCert.year,
-                degree: 'Bachelor of Technology in Civil Engineering',
+                degree: newCert.degree || 'Bachelor of Technology',
             });
             setCertificates((prev) => [...prev, result]);
-            setNewCert({ certNumber: '', name: '', institution: '', year: '' });
+            setNewCert({ certNumber: '', name: '', institution: '', year: '', degree: '' });
             showToast(`Successfully added certificate ${result.certNumber}`);
         } catch (error) {
             console.error('Error adding certificate:', error);
@@ -69,16 +79,52 @@ export default function AdminDashboard({ onOpenCertViewer, showToast }) {
         }
     };
 
-    const handleDeleteCertificate = async (cert) => {
-        if (confirm('Are you sure you want to delete this certificate record?')) {
-            try {
-                await deleteCertFromDB(cert.id);
-                setCertificates((prev) => prev.filter((c) => c.id !== cert.id));
-                showToast(`Certificate ${cert.certNumber} deleted.`);
-            } catch (error) {
-                console.error('Error deleting certificate:', error);
-                showToast('Failed to delete certificate.', 'error');
-            }
+    const handleOcrScan = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        setIsOcrScanning(true);
+        try {
+            const analysis = await analyzeFullCertificate(file);
+            const { extractedFields } = analysis;
+            setNewCert({
+                certNumber: extractedFields.certNumber || '',
+                name: extractedFields.name || '',
+                institution: extractedFields.institution || '',
+                year: extractedFields.year || '',
+                degree: extractedFields.degree || '',
+            });
+            showToast('OCR Scan completed! Form auto-filled.');
+        } catch (error) {
+            console.error('Admin OCR error:', error);
+            showToast('OCR scan failed.', 'error');
+        } finally {
+            setIsOcrScanning(false);
+            if (certScanInputRef.current) certScanInputRef.current.value = '';
+        }
+    };
+
+    const handleActionUpload = async (e) => {
+        const file = e.target.files[0];
+        if (!file || !uploadingForCert) return;
+
+        try {
+            showToast('Uploading certificate image...');
+            const imageUrl = await uploadCertificateImage(uploadingForCert.certNumber, file);
+            await updateCertificate(uploadingForCert.id, { imageUrl });
+
+            // Update local state
+            setCertificates(prev => prev.map(c =>
+                c.id === uploadingForCert.id ? { ...c, imageUrl } : c
+            ));
+
+            showToast('Certificate image updated successfully!');
+        } catch (error) {
+            console.error('Image upload error:', error);
+            showToast('Failed to upload image.', 'error');
+        } finally {
+            setUploadingForCert(null);
+            if (tableImageInputRef.current) tableImageInputRef.current.value = '';
         }
     };
 
@@ -144,29 +190,76 @@ export default function AdminDashboard({ onOpenCertViewer, showToast }) {
         }
 
         let successCount = 0;
+        setIsBulkUploading(true);
+        setBulkProgress({ current: 0, total: filesToProcess.length, filename: '' });
+
+        showToast(`Processing ${filesToProcess.length} file(s)...`);
+
         for (let i = 0; i < filesToProcess.length; i++) {
             const file = filesToProcess[i];
-            const mockCert = {
-                certNumber: `${file.type.includes('pdf') ? 'PDF' : file.name.split('.').pop().toUpperCase()}-${Math.floor(100000 + Math.random() * 900000)}`,
-                name: `Scanned Graduate ${i + 1}`,
-                institution: `Institution ${String.fromCharCode(65 + Math.floor(Math.random() * 26))}`,
-                year: String(2020 + Math.floor(Math.random() * 5)),
-                degree: 'Dummy Bulk Upload Degree',
-            };
+            setBulkProgress(prev => ({ ...prev, current: i + 1, filename: file.name }));
 
             try {
-                const result = await addCertificate(mockCert);
-                setCertificates((prev) => [...prev, result]);
-                successCount++;
+                if (file.type === 'application/pdf') {
+                    // PDF processing: Run full OCR and visual analysis
+                    const analysis = await analyzeFullCertificate(file);
+                    const { extractedFields, overallConfidence } = analysis;
+
+                    if (!extractedFields.certNumber) {
+                        console.warn(`Could not extract cert number from PDF: ${file.name}. Using filename as fallback.`);
+                        // Fallback: Use filename without extension if cert number regex fails
+                        extractedFields.certNumber = file.name.split('.')[0].replace(/\s+/g, '_').toUpperCase();
+                    }
+
+                    // Convert dataURL to Blob for upload
+                    const response = await fetch(analysis.previewUrl);
+                    const blob = await response.blob();
+                    const imageFile = new File([blob], `${extractedFields.certNumber}_preview.png`, { type: 'image/png' });
+
+                    // Upload preview image
+                    const imageUrl = await uploadCertificateImage(extractedFields.certNumber, imageFile);
+
+                    // Add certificate to database - ensure all fields are passed
+                    const certResult = await addCertificate({
+                        certNumber: extractedFields.certNumber,
+                        name: extractedFields.name || `Unknown (${file.name})`,
+                        institution: extractedFields.institution || 'Unknown Institution',
+                        year: extractedFields.year || 'N/A',
+                        degree: extractedFields.degree || 'N/A',
+                        imageUrl,
+                        analysisConfidence: overallConfidence
+                    });
+
+                    // Save OCR analysis log for audit trail
+                    await saveOcrScanResult(analysis, 'Admin_Bulk_PDF');
+
+                    setCertificates((prev) => [certResult, ...prev]);
+                    successCount++;
+                } else {
+                    // Fallback for CSV/Excel (keep existing mock behavior for now or implement parser)
+                    const mockCert = {
+                        certNumber: `${file.name.split('.').pop().toUpperCase()}-${Math.floor(100000 + Math.random() * 900000)}`,
+                        name: `Scanned Graduate ${i + 1}`,
+                        institution: `Institution ${String.fromCharCode(65 + Math.floor(Math.random() * 26))}`,
+                        year: String(2020 + Math.floor(Math.random() * 5)),
+                        degree: 'Dummy Bulk Upload Degree',
+                    };
+                    const result = await addCertificate(mockCert);
+                    setCertificates((prev) => [...prev, result]);
+                    successCount++;
+                }
             } catch (error) {
-                console.error('Bulk upload error:', error);
+                console.error(`Error processing file ${file.name}:`, error);
             }
         }
+
+        setIsBulkUploading(false);
+        setBulkProgress({ current: 0, total: 0, filename: '' });
 
         if (successCount > 0) {
             showToast(`Successfully processed ${successCount} certificate(s).`);
         } else {
-            showToast('Bulk upload failed.', 'error');
+            showToast('Bulk upload failed or no certificates recognized.', 'error');
         }
     };
 
@@ -180,6 +273,26 @@ export default function AdminDashboard({ onOpenCertViewer, showToast }) {
                     <div className="admin-form-container">
                         <h3>Add New Certificate</h3>
                         <form id="add-certificate-form" onSubmit={handleAddCertificate}>
+                            <div className="form-group" style={{ marginBottom: '20px' }}>
+                                <label>AI Assistant</label>
+                                <button
+                                    type="button"
+                                    className="btn btn-secondary"
+                                    style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', background: 'var(--primary-blue)', color: '#fff' }}
+                                    onClick={() => certScanInputRef.current?.click()}
+                                    disabled={isOcrScanning}
+                                >
+                                    <i className={isOcrScanning ? "fas fa-spinner fa-spin" : "fas fa-magic"}></i>
+                                    {isOcrScanning ? 'Scanning Certificate...' : 'Fill Form using AI OCR'}
+                                </button>
+                                <input
+                                    type="file"
+                                    ref={certScanInputRef}
+                                    hidden
+                                    accept="image/*"
+                                    onChange={handleOcrScan}
+                                />
+                            </div>
                             <div className="form-group">
                                 <label htmlFor="newCertNumber">Certificate Number</label>
                                 <input
@@ -220,6 +333,17 @@ export default function AdminDashboard({ onOpenCertViewer, showToast }) {
                                     onChange={(e) => setNewCert((p) => ({ ...p, year: e.target.value }))}
                                 />
                             </div>
+                            <div className="form-group">
+                                <label htmlFor="newDegree">Degree / Qualification</label>
+                                <input
+                                    type="text"
+                                    id="newDegree"
+                                    required
+                                    placeholder="e.g. B.Tech Computer Science"
+                                    value={newCert.degree}
+                                    onChange={(e) => setNewCert((p) => ({ ...p, degree: e.target.value }))}
+                                />
+                            </div>
                             <button type="submit" className="btn btn-primary" style={{ width: '100%' }}>
                                 Add Certificate
                             </button>
@@ -251,41 +375,82 @@ export default function AdminDashboard({ onOpenCertViewer, showToast }) {
                                 <h3>Bulk Upload Certificates</h3>
                                 <p>Drag & drop a CSV, Excel, or PDF file here, or click to browse.</p>
                             </div>
+
+                            {isBulkUploading && (
+                                <div className="bulk-progress-container">
+                                    <div className="bulk-progress-info">
+                                        <span>Scanning {bulkProgress.current} of {bulkProgress.total}</span>
+                                        <span className="bulk-current-file">{bulkProgress.filename}</span>
+                                    </div>
+                                    <div className="progress-bar-bg">
+                                        <div
+                                            className="progress-bar-fill"
+                                            style={{ width: `${(bulkProgress.current / bulkProgress.total) * 100}%` }}
+                                        ></div>
+                                    </div>
+                                </div>
+                            )}
                         </div>
 
                         <h3>Manage Certificates</h3>
-                        <table className="certificates-table">
-                            <thead>
-                                <tr>
-                                    <th>Cert #</th>
-                                    <th>Name</th>
-                                    <th>Institution</th>
-                                    <th>Year</th>
-                                    <th>Action</th>
-                                </tr>
-                            </thead>
-                            <tbody id="certificates-tbody">
-                                {certificates.map((cert) => (
-                                    <tr
-                                        key={cert.id}
-                                        onClick={() => onOpenCertViewer(cert.certNumber, cert.name, cert.institution, cert.year)}
-                                    >
-                                        <td>{cert.certNumber}</td>
-                                        <td>{cert.name}</td>
-                                        <td>{cert.institution}</td>
-                                        <td>{cert.year}</td>
-                                        <td>
-                                            <button
-                                                className="btn btn-danger"
-                                                onClick={(e) => { e.stopPropagation(); handleDeleteCertificate(cert); }}
-                                            >
-                                                Delete
-                                            </button>
-                                        </td>
+                        <div className="table-scroll-container">
+                            <table className="certificates-table">
+                                <thead>
+                                    <tr>
+                                        <th>Cert #</th>
+                                        <th>Name</th>
+                                        <th>Institution</th>
+                                        <th>Degree</th>
+                                        <th>Year</th>
+                                        <th>Action</th>
                                     </tr>
-                                ))}
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody id="certificates-tbody">
+                                    {certificates.map((cert) => (
+                                        <tr key={cert.id}>
+                                            <td>{cert.certNumber}</td>
+                                            <td>{cert.name}</td>
+                                            <td>{cert.institution}</td>
+                                            <td>{cert.degree || 'N/A'}</td>
+                                            <td>{cert.year}</td>
+                                            <td>
+                                                {cert.imageUrl ? (
+                                                    <button
+                                                        className="btn btn-primary"
+                                                        style={{ padding: '5px 15px', fontSize: '0.8rem' }}
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            onOpenCertViewer(cert.certNumber, cert.name, cert.institution, cert.degree, cert.year, cert.imageUrl);
+                                                        }}
+                                                    >
+                                                        <i className="fas fa-eye"></i> Preview
+                                                    </button>
+                                                ) : (
+                                                    <button
+                                                        className="btn btn-secondary"
+                                                        style={{ padding: '5px 15px', fontSize: '0.8rem', background: '#f39c12' }}
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            setUploadingForCert(cert);
+                                                            tableImageInputRef.current?.click();
+                                                        }}
+                                                    >
+                                                        <i className="fas fa-plus-circle"></i> Add Image
+                                                    </button>
+                                                )}
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                        <input
+                            type="file"
+                            ref={tableImageInputRef}
+                            hidden
+                            accept="image/*"
+                            onChange={handleActionUpload}
+                        />
                     </div>
                 </div>
 
@@ -385,6 +550,6 @@ export default function AdminDashboard({ onOpenCertViewer, showToast }) {
                     )}
                 </div>
             </div>
-        </section>
+        </section >
     );
 }

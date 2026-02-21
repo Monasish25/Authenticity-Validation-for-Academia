@@ -42,7 +42,14 @@ body::before {
 }
 
 /* Apply a semi-transparent background to all content sections for readability */
-.hero, .features, .verification-section, .results-section, .about-section, .dashboard-section, .admin-dashboard-section, .modal-content {
+.hero,
+.features,
+.verification-section,
+.results-section,
+.about-section,
+.dashboard-section,
+.admin-dashboard-section,
+.modal-content {
     background-color: rgba(255, 255, 255, 0);
     backdrop-filter: blur(5px);
 }
@@ -209,7 +216,7 @@ nav a:hover:after {
     left: -50%;
     width: 200%;
     height: 200%;
-    background: radial-gradient(circle, rgba(255,255,255,0.8) 0%, transparent 60%);
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.8) 0%, transparent 60%);
     transform: rotate(30deg);
     opacity: 0;
     transition: opacity 0.3s;
@@ -356,7 +363,8 @@ section {
     font-size: 0.9rem;
 }
 
-.or-divider:before, .or-divider:after {
+.or-divider:before,
+.or-divider:after {
     content: '';
     flex: 1;
     height: 1px;
@@ -382,7 +390,8 @@ section {
     font-size: 0.875rem;
 }
 
-.form-group input, .form-group select {
+.form-group input,
+.form-group select {
     width: 100%;
     padding: 0.625rem 0.75rem;
     border: 1px solid #d1d5db;
@@ -391,7 +400,8 @@ section {
     transition: all 0.3s ease;
 }
 
-.form-group input:focus, .form-group select:focus {
+.form-group input:focus,
+.form-group select:focus {
     border-color: var(--primary-blue);
     outline: none;
     box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
@@ -542,12 +552,10 @@ section {
     left: -50%;
     width: 200%;
     height: 200%;
-    background: linear-gradient(
-        to bottom right,
-        rgba(255, 255, 255, 0) 0%,
-        rgba(255, 255, 255, 0.8) 50%,
-        rgba(255, 255, 255, 0) 100%
-    );
+    background: linear-gradient(to bottom right,
+            rgba(255, 255, 255, 0) 0%,
+            rgba(255, 255, 255, 0.8) 50%,
+            rgba(255, 255, 255, 0) 100%);
     transform: rotate(45deg);
     animation: shine 3s infinite;
     opacity: 0;
@@ -575,10 +583,11 @@ section {
 @media (min-width: 992px) {
     .admin-grid {
         grid-template-columns: 1fr 2fr;
-   }
+    }
 }
 
-.admin-form-container, .admin-table-container {
+.admin-form-container,
+.admin-table-container {
     background-color: var(--white);
     padding: 2rem;
     border-radius: 1rem;
@@ -592,7 +601,7 @@ section {
 }
 
 .admin-table-container {
-     overflow-x: auto;
+    overflow-x: auto;
 }
 
 .certificates-table {
@@ -601,7 +610,8 @@ section {
     margin-top: 1rem;
 }
 
-.certificates-table th, .certificates-table td {
+.certificates-table th,
+.certificates-table td {
     padding: 0.75rem 1rem;
     text-align: left;
     border-bottom: 1px solid #e5e7eb;
@@ -625,6 +635,79 @@ section {
     padding: 0.25rem 0.75rem;
     font-size: 0.8rem;
     border-radius: 5px;
+}
+
+/* --- Bulk Progress Bar --- */
+.bulk-progress-container {
+    margin: 15px 0;
+    padding: 10px;
+    background: var(--light-gray);
+    border-radius: 10px;
+    animation: fadeIn 0.3s ease;
+}
+
+.bulk-progress-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+    font-size: 0.85rem;
+    color: var(--secondary-blue);
+    font-weight: 600;
+}
+
+.bulk-current-file {
+    font-weight: 400;
+    color: #666;
+    font-style: italic;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 200px;
+}
+
+.progress-bar-bg {
+    width: 100%;
+    height: 10px;
+    background: #e5e7eb;
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+.progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--primary-blue), var(--accent-blue));
+    width: 0%;
+    transition: width 0.3s ease;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(59, 130, 246, 0.4);
+}
+
+/* --- Scrollable Table Wrapper --- */
+.table-scroll-container {
+    max-height: 280px;
+    /* Approximately 2-3 rows */
+    overflow-y: auto;
+    margin-top: 15px;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+}
+
+.table-scroll-container::-webkit-scrollbar {
+    width: 6px;
+}
+
+.table-scroll-container::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+.table-scroll-container::-webkit-scrollbar-thumb {
+    background: #d1d5db;
+    border-radius: 3px;
+}
+
+.table-scroll-container::-webkit-scrollbar-thumb:hover {
+    background: #9ca3af;
 }
 
 .stats-grid {
@@ -919,7 +1002,7 @@ nav a:hover:after {
 .role-btn.active {
     background-color: var(--primary-blue);
     color: var(--white);
-    box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .social-login {
@@ -969,7 +1052,8 @@ nav a:hover:after {
     font-size: 0.8rem;
 }
 
-.modal-divider:before, .modal-divider:after {
+.modal-divider:before,
+.modal-divider:after {
     content: '';
     flex: 1;
     height: 1px;
@@ -1035,52 +1119,121 @@ nav a:hover:after {
 
 /* --- Animations --- */
 @keyframes pulse {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.1); }
-    100% { transform: scale(1); }
+    0% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.1);
+    }
+
+    100% {
+        transform: scale(1);
+    }
 }
 
 @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 @keyframes modalFadeIn {
-    from { opacity: 0; transform: translateY(-50px) scale(0.9); }
-    to { opacity: 1; transform: translateY(0) scale(1); }
+    from {
+        opacity: 0;
+        transform: translateY(-50px) scale(0.9);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
 }
 
 @keyframes sparkle {
-    0% { transform: rotate(30deg) translate(-10%, -10%); opacity: 0; }
-    50% { opacity: 1; }
-    100% { transform: rotate(30deg) translate(10%, 10%); opacity: 0; }
+    0% {
+        transform: rotate(30deg) translate(-10%, -10%);
+        opacity: 0;
+    }
+
+    50% {
+        opacity: 1;
+    }
+
+    100% {
+        transform: rotate(30deg) translate(10%, 10%);
+        opacity: 0;
+    }
 }
 
 @keyframes shine {
-    0% { opacity: 0; transform: translateX(-100%) rotate(45deg); }
-    20% { opacity: 1; }
-    40% { opacity: 0.5; }
-    100% { opacity: 0; transform: translateX(100%) rotate(45deg); }
+    0% {
+        opacity: 0;
+        transform: translateX(-100%) rotate(45deg);
+    }
+
+    20% {
+        opacity: 1;
+    }
+
+    40% {
+        opacity: 0.5;
+    }
+
+    100% {
+        opacity: 0;
+        transform: translateX(100%) rotate(45deg);
+    }
 }
 
 @keyframes spin {
-    to { transform: rotate(360deg); }
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 @keyframes scan-animation {
-    0% { top: 0%; }
-    100% { top: calc(100% - 3px); }
+    0% {
+        top: 0%;
+    }
+
+    100% {
+        top: calc(100% - 3px);
+    }
 }
 
 @keyframes shake {
-  10%, 90% { transform: translate3d(-1px, 0, 0); }
-  20%, 80% { transform: translate3d(2px, 0, 0); }
-  30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
-  40%, 60% { transform: translate3d(4px, 0, 0); }
+
+    10%,
+    90% {
+        transform: translate3d(-1px, 0, 0);
+    }
+
+    20%,
+    80% {
+        transform: translate3d(2px, 0, 0);
+    }
+
+    30%,
+    50%,
+    70% {
+        transform: translate3d(-4px, 0, 0);
+    }
+
+    40%,
+    60% {
+        transform: translate3d(4px, 0, 0);
+    }
 }
 
 .shake-element {
-  animation: shake 0.82s cubic-bezier(.36,.07,.19,.97) both;
+    animation: shake 0.82s cubic-bezier(.36, .07, .19, .97) both;
 }
 
 .fade-in {
@@ -1094,20 +1247,53 @@ nav a:hover:after {
     transform: translateY(0);
 }
 
-.features-grid .feature-card { transition-delay: 0.1s; }
-.features-grid .feature-card:nth-child(2) { transition-delay: 0.2s; }
-.features-grid .feature-card:nth-child(3) { transition-delay: 0.3s; }
-.features-grid .feature-card:nth-child(4) { transition-delay: 0.4s; }
+.features-grid .feature-card {
+    transition-delay: 0.1s;
+}
 
-.team-grid .team-member { transition-delay: 0.1s; }
-.team-grid .team-member:nth-child(2) { transition-delay: 0.2s; }
-.team-grid .team-member:nth-child(3) { transition-delay: 0.3s; }
-.team-grid .team-member:nth-child(4) { transition-delay: 0.4s; }
+.features-grid .feature-card:nth-child(2) {
+    transition-delay: 0.2s;
+}
 
-.stats-grid .stat-card { transition-delay: 0.1s; }
-.stats-grid .stat-card:nth-child(2) { transition-delay: 0.2s; }
-.stats-grid .stat-card:nth-child(3) { transition-delay: 0.3s; }
-.stats-grid .stat-card:nth-child(4) { transition-delay: 0.4s; }
+.features-grid .feature-card:nth-child(3) {
+    transition-delay: 0.3s;
+}
+
+.features-grid .feature-card:nth-child(4) {
+    transition-delay: 0.4s;
+}
+
+.team-grid .team-member {
+    transition-delay: 0.1s;
+}
+
+.team-grid .team-member:nth-child(2) {
+    transition-delay: 0.2s;
+}
+
+.team-grid .team-member:nth-child(3) {
+    transition-delay: 0.3s;
+}
+
+.team-grid .team-member:nth-child(4) {
+    transition-delay: 0.4s;
+}
+
+.stats-grid .stat-card {
+    transition-delay: 0.1s;
+}
+
+.stats-grid .stat-card:nth-child(2) {
+    transition-delay: 0.2s;
+}
+
+.stats-grid .stat-card:nth-child(3) {
+    transition-delay: 0.3s;
+}
+
+.stats-grid .stat-card:nth-child(4) {
+    transition-delay: 0.4s;
+}
 
 .result-icon i {
     display: inline-block;
@@ -1122,6 +1308,7 @@ nav a:hover:after {
 .section-title::after {
     transition: width 0.4s ease-in-out;
 }
+
 .section-title:hover::after {
     width: 120px;
 }
@@ -1245,9 +1432,20 @@ nav a:hover:after {
 }
 
 @keyframes pulse-red {
-    0% { transform: scale(1); opacity: 0.7; }
-    50% { transform: scale(1.2); opacity: 1; }
-    100% { transform: scale(1); opacity: 0.7; }
+    0% {
+        transform: scale(1);
+        opacity: 0.7;
+    }
+
+    50% {
+        transform: scale(1.2);
+        opacity: 1;
+    }
+
+    100% {
+        transform: scale(1);
+        opacity: 0.7;
+    }
 }
 
 @keyframes slide-in-red-glow {
@@ -1256,6 +1454,7 @@ nav a:hover:after {
         transform: translateX(-50px);
         box-shadow: 0 0 0px var(--danger);
     }
+
     to {
         opacity: 1;
         transform: translateX(0);
@@ -1268,6 +1467,7 @@ nav a:hover:after {
         opacity: 1;
         transform: scale(1);
     }
+
     to {
         opacity: 0;
         transform: scale(0.9);
@@ -1406,14 +1606,31 @@ nav a:hover:after {
 }
 
 .shake-element {
-  animation: shake 0.82s cubic-bezier(.36,.07,.19,.97) both;
+    animation: shake 0.82s cubic-bezier(.36, .07, .19, .97) both;
 }
 
 @keyframes shake {
-  10%, 90% { transform: translate3d(-1px, 0, 0); }
-  20%, 80% { transform: translate3d(2px, 0, 0); }
-  30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
-  40%, 60% { transform: translate3d(4px, 0, 0); }
+
+    10%,
+    90% {
+        transform: translate3d(-1px, 0, 0);
+    }
+
+    20%,
+    80% {
+        transform: translate3d(2px, 0, 0);
+    }
+
+    30%,
+    50%,
+    70% {
+        transform: translate3d(-4px, 0, 0);
+    }
+
+    40%,
+    60% {
+        transform: translate3d(4px, 0, 0);
+    }
 }
 
 @keyframes fade-in-up {
@@ -1421,6 +1638,7 @@ nav a:hover:after {
         opacity: 0;
         transform: translateY(20px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
@@ -1459,7 +1677,7 @@ nav a:hover:after {
 #new-qr-reader.scan-failure {
     border-color: var(--danger);
     box-shadow: 0 0 25px 8px rgba(239, 68, 68, 0.7);
-    animation: shake 0.82s cubic-bezier(.36,.07,.19,.97) both;
+    animation: shake 0.82s cubic-bezier(.36, .07, .19, .97) both;
 }
 
 /* NEW STYLES FOR CERTIFICATE VIEWER MODAL */
@@ -1469,22 +1687,19 @@ nav a:hover:after {
     background-color: var(--white);
     border-radius: 1rem;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-    display: none; /* Initially hidden */
+    /* React handles visibility, no need for display: none here */
 }
 
 .cert-viewer-grid {
     display: grid;
-    grid-template-columns: 1fr 1px 1fr;
-    gap: 2rem;
-    align-items: center;
+    grid-template-columns: 1.2fr 1fr;
+    gap: 2.5rem;
+    align-items: start;
 }
 
-.cert-viewer-grid::after {
-    content: '';
-    display: block;
-    width: 1px;
-    height: 100%;
-    background-color: var(--light-gray);
+.cert-viewer-details {
+    padding-left: 2rem;
+    border-left: 1px solid var(--light-gray);
 }
 
 @media (max-width: 768px) {
@@ -1497,8 +1712,11 @@ nav a:hover:after {
     }
 }
 
-.cert-viewer-preview, .cert-viewer-details {
+.cert-viewer-preview,
+.cert-viewer-details {
     padding: 1rem;
+    min-height: 400px;
+    /* Ensure content area doesn't collapse */
 }
 
 .cert-viewer-details h3 {
@@ -1538,7 +1756,7 @@ nav a:hover:after {
 
 /* Shake animation for login error */
 .shake-element {
-  animation: shake 0.82s cubic-bezier(.36,.07,.19,.97) both;
+    animation: shake 0.82s cubic-bezier(.36, .07, .19, .97) both;
 }
 
 
@@ -1583,12 +1801,47 @@ nav a:hover:after {
 }
 
 @keyframes toastSlideUp {
-    from { transform: translateY(100px); opacity: 0; }
-    to { transform: translateY(0); opacity: 1; }
+    from {
+        transform: translateY(100px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
 }
 
 @keyframes toastFadeOut {
-    from { opacity: 1; }
-    to { opacity: 0; visibility: hidden; }
+    from {
+        opacity: 1;
+    }
+
+    to {
+        opacity: 0;
+        visibility: hidden;
+    }
 }
 
+/* --- Badges for Dashboard Activity --- */
+.badge {
+    display: inline-block;
+    padding: 0.25rem 0.6rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    line-height: 1;
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: baseline;
+    border-radius: 0.375rem;
+}
+
+.badge-success {
+    background-color: #def7ec;
+    color: #03543f;
+}
+
+.badge-warning {
+    background-color: #fef3c7;
+    color: #92400e;
+}

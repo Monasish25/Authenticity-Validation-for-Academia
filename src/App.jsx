@@ -96,8 +96,8 @@ function AppContent() {
       {isLoggedIn && <Dashboard />}
 
       <AdminDashboard
-        onOpenCertViewer={(certNumber, name, institution, year) => {
-          setCertViewerData({ certNumber, name, institution, year });
+        onOpenCertViewer={(certNumber, name, institution, degree, year, imageUrl) => {
+          setCertViewerData({ certNumber, name, institution, degree, year, imageUrl });
           setCertViewerOpen(true);
         }}
         showToast={showToast}
